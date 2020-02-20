@@ -49,7 +49,7 @@ export default function loader(source) {
   // Extract all images and add require statements for them
   const assets = selectAll('image', tree).map(node => {
     const path = JSON.stringify(node.url);
-    return `[${path}]: require(${path}),`;
+    return `  [${path}]: require(${path}),\n`;
   });
 
   // Convert from MAST to HAST
@@ -77,7 +77,9 @@ export default function loader(source) {
     import Template from ${template};
     import { hastToMdx } from ${utils};
 
-    var assets = { ${assets.join(',')} };
+    var assets = {
+      ${assets.join('')}
+    };
     var mdx = hastToMdx(${JSON.stringify(hast)}, assets);
 
     export default function MarkdownTemplate(props) {
