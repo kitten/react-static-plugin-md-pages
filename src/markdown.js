@@ -7,6 +7,7 @@ import { promisify } from 'util';
 import GithubSlugger from 'github-slugger';
 import nodeGlob from 'glob';
 import { read as readVFile } from 'to-vfile';
+import visit from 'unist-util-visit';
 import { select, selectAll } from 'unist-util-select';
 import * as path from 'path';
 
@@ -44,8 +45,7 @@ const groupPages = (pages, pathPrefix, orderOverride = {}) => {
       const isIndexPage = INDEX_PAGE_RE.test(childGroupName);
       if (!isIndexPage) {
         keyPath.push(childGroupName);
-        order = typeof order === 'object' &&
-          order[childGroupName];
+        order = typeof order === 'object' && order[childGroupName];
         group =
           group.children[childGroupName] ||
           (group.children[childGroupName] = makeGroup(childGroupName, order));
@@ -59,9 +59,10 @@ const groupPages = (pages, pathPrefix, orderOverride = {}) => {
     group.frontmatter = {
       ...group.frontmatter,
       ...page.frontmatter,
-      order: typeof group.frontmatter.order === 'number'
-        ? group.frontmatter.order
-        : page.frontmatter.order
+      order:
+        typeof group.frontmatter.order === 'number'
+          ? group.frontmatter.order
+          : page.frontmatter.order,
     };
   }
 

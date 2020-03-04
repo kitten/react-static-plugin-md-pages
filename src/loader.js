@@ -6,6 +6,7 @@ import toString from 'mdast-util-to-string';
 import toHast from '@mdx-js/mdx/mdx-ast-to-mdx-hast';
 import visit from 'unist-util-visit';
 import remove from 'unist-util-remove';
+import raw from 'hast-util-raw';
 
 import { getMarkdownProcessor, getPageData } from './markdown';
 
@@ -46,24 +47,36 @@ export default function loader(source) {
     return node;
   });
 
-  // Extract all images and add require statements for them
-  const assets = selectAll('image', tree).map(node => {
-    const path = JSON.stringify(node.url);
-    return `  [${path}]: require(${path}),\n`;
-  });
-
   // Convert from MAST to HAST
   const hast = toHast()(tree);
 
-  // Find all headings and add ids to them
+  // Convert raw nodes into HAST
+  visit(hast, 'raw', node => {
+    const { children, tagName, properties } = raw(node);
+    node.type = 'element';
+    node.children = children;
+    node.tagName = tagName;
+    node.properties = properties;
+  });
+
   const slugger = new GithubSlugger();
+  const assets = [];
+
   visit(hast, 'element', node => {
-    if (/h\d/.test(node.tagName))
+    if (/h\d/.test(node.tagName)) {
       node.properties.id = slugger.slug(toString(node));
+    } else if (node.tagName === 'img') {
+      const { src } = node.properties;
+      if (/^\./.test(src)) {
+        const path = JSON.stringify(src);
+        assets.push(`  [${path}]: require(${path}),\n`);
+      }
+    }
   });
 
   // Remove empty text lines
   remove(hast, 'text', node => /^[\n\r]+$/.test(node.value));
+
   // Remove empty paragraphs
   remove(
     hast,
@@ -80,10 +93,12 @@ export default function loader(source) {
     var assets = {
       ${assets.join('')}
     };
-    var mdx = hastToMdx(${JSON.stringify(hast)}, assets);
+
+    var hast = ${JSON.stringify(hast)};
 
     export default function MarkdownTemplate(props) {
+      var mdx = React.useMemo(() => hastToMdx(hast, assets), [hast, assets]);
       return <Template {...props}>{mdx}</Template>;
-    }
+    };
   `;
 }
