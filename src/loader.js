@@ -35,12 +35,14 @@ export default function loader(source) {
   // Fix up all links that end in `.md`
   visit(tree, 'link', node => {
     try {
+      const [route = '', hash = ''] = node.url.split('#');
       // Only apply to matching URLs
-      if (!REMAP_ROUTE_RE.test(node.url)) return node;
+      if (!REMAP_ROUTE_RE.test(route)) return node;
       // Check whether the link's normalised URL is a known markdown file
-      if (resolve(this.context, node.url).startsWith(location)) {
+      if (resolve(this.context, route).startsWith(location)) {
         // If so remove the `.md` extension
-        node.url = node.url.replace(REMAP_ROUTE_RE, '');
+        node.url = route.replace(REMAP_ROUTE_RE, '');
+        if (hash) node.url += `#${hash}`;
       }
     } catch (_err) {}
 
