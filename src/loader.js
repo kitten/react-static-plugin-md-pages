@@ -10,6 +10,7 @@ import raw from 'hast-util-raw';
 
 import { getMarkdownProcessor, getPageData } from './markdown';
 
+const INDEX_ROUTE_RE = /(?:[/\\]?(?:readme|index))\.md$/i;
 const REMAP_ROUTE_RE = /(?:[/\\]?(?:readme|index))?\.md$/i;
 
 export default function loader(source) {
@@ -42,6 +43,7 @@ export default function loader(source) {
       if (resolve(this.context, route).startsWith(location)) {
         // If so remove the `.md` extension
         node.url = route.replace(REMAP_ROUTE_RE, '');
+        if (INDEX_ROUTE_RE.test(route)) node.url += '/';
         if (hash) node.url += `#${hash}`;
       }
     } catch (_err) {}
