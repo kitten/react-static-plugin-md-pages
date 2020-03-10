@@ -42,7 +42,11 @@ export const useMarkdownPage = () => {
   let page;
   try {
     page = useRouteData().page;
-  } catch (_err) {
+  } catch (err) {
+    if (err && typeof err.then === 'function') {
+      throw err;
+    }
+
     return previousPage;
   }
 
@@ -56,7 +60,11 @@ export const useMarkdownTree = () => {
   let pagesData;
   try {
     pagesData = useRouteData().pages || undefined;
-  } catch (_err) {}
+  } catch (err) {
+    if (err && typeof err.then === 'function') {
+      throw err;
+    }
+  }
 
   return pages || (pages = pagesData);
 };
