@@ -23,7 +23,8 @@ export const hastToMdx = (node, assets, i = 0) => {
       };
 
       // Normalise className props to consistently be strings
-      if (Array.isArray(props.className)) props.className = props.className.join(' ');
+      if (Array.isArray(props.className))
+        props.className = props.className.join(' ');
 
       // Given a dictionary of image files, read the Webpack-included
       // output path and replace the `src` path.
@@ -36,13 +37,26 @@ export const hastToMdx = (node, assets, i = 0) => {
 };
 
 /** Returns the current page's markdown data */
+let previousPage;
 export const useMarkdownPage = () => {
-  const { page } = useRouteData();
-  if (!page || !page.frontmatter) return;
-  return page;
+  let page;
+  try {
+    page = useRouteData().page;
+  } catch (_err) {
+    return previousPage;
+  }
+
+  if (!page || !page.frontmatter) return previousPage;
+  return (previousPage = page);
 };
 
 /* Returns all page's nested markdown data */
+let pages;
 export const useMarkdownTree = () => {
-  return useRouteData().pages || undefined;
+  let pagesData;
+  try {
+    pagesData = useRouteData().pages || undefined;
+  } catch (_err) {}
+
+  return pages || (pages = pagesData);
 };
