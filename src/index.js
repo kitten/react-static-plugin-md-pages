@@ -1,4 +1,4 @@
-import { useRouteData } from 'react-static';
+import React from 'react';
 import { mdx } from '@mdx-js/react';
 
 /** Recursively convert an MDX-compatible HAST to JSX */
@@ -36,35 +36,18 @@ export const hastToMdx = (node, assets, i = 0) => {
   }
 };
 
+export const PageContext = React.createContext({
+  page: null,
+  pages: null,
+});
+
 /** Returns the current page's markdown data */
-let previousPage;
 export const useMarkdownPage = () => {
-  let page;
-  try {
-    page = useRouteData().page;
-  } catch (err) {
-    if (err && typeof err.then === 'function') {
-      throw err;
-    }
-
-    return previousPage;
-  }
-
-  if (!page || !page.frontmatter) return previousPage;
-  return (previousPage = page);
+  const { page } = React.useContext(PageContext);
+  return page && page.frontmatter ? page : null;
 };
 
 /* Returns all page's nested markdown data */
-let pages;
 export const useMarkdownTree = () => {
-  let pagesData;
-  try {
-    pagesData = useRouteData().pages || undefined;
-  } catch (err) {
-    if (err && typeof err.then === 'function') {
-      throw err;
-    }
-  }
-
-  return pages || (pages = pagesData);
+  return React.useContext(PageContext).pages;
 };

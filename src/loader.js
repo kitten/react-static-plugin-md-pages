@@ -1,4 +1,4 @@
-import { resolve } from 'path';
+import * as path from 'path';
 import { getOptions, stringifyRequest } from 'loader-utils';
 import { selectAll } from 'unist-util-select';
 import GithubSlugger from 'github-slugger';
@@ -10,6 +10,7 @@ import raw from 'hast-util-raw';
 
 import { getMarkdownProcessor, getPageData } from './markdown';
 
+const INDEX_PAGE_RE = /^(readme|index)$/i;
 const INDEX_ROUTE_RE = /(?:[/\\]?(?:readme|index))\.md$/i;
 const REMAP_ROUTE_RE = /(?:[/\\]?(?:readme|index))?\.md$/i;
 
@@ -18,18 +19,36 @@ export default function loader(source) {
 
   // Ensure that the template and utilities are relative paths
   const location = options.location || process.cwd();
+  const pathPrefix = options.pathPrefix || '';
   const utils = stringifyRequest(this, require.resolve('./index.js'));
+  const pagesData = stringifyRequest(this, options.pagesDataFile);
   const processor = getMarkdownProcessor(options.remarkPlugins);
+
+  // Compute the page's originalPath and path
+  const relative = path.relative(location, this.resourcePath);
+  const originalPath = path.join(
+    path.dirname(relative),
+    path.basename(relative, '.md')
+  );
+  const keyPath = (pathPrefix ? [pathPrefix] : [])
+    .concat(originalPath.split(path.sep))
+    .filter(key => !INDEX_PAGE_RE.test(key));
 
   // Parse the markdown contents
   const tree = processor.parse(source);
-  const { frontmatter } = getPageData(tree);
+  const pageData = {
+    ...getPageData(tree),
+    originalPath,
+    key: keyPath[keyPath.length - 1],
+    path: keyPath.join('/'),
+  };
 
   // Use override template if provided
+  const { frontmatter } = pageData;
   const template = stringifyRequest(
     this,
     frontmatter.template
-      ? resolve(this.context, frontmatter.template)
+      ? path.resolve(this.context, frontmatter.template)
       : options.defaultTemplate
   );
 
@@ -40,7 +59,7 @@ export default function loader(source) {
       // Only apply to matching URLs
       if (!REMAP_ROUTE_RE.test(route)) return node;
       // Check whether the link's normalised URL is a known markdown file
-      if (resolve(this.context, route).startsWith(location)) {
+      if (path.resolve(this.context, route).startsWith(location)) {
         // If so remove the `.md` extension
         node.url = route.replace(REMAP_ROUTE_RE, '');
         if (INDEX_ROUTE_RE.test(route)) node.url += '/';
@@ -90,19 +109,25 @@ export default function loader(source) {
 
   return `
     import React from "react";
-    import { useRouteData } from "react-static";
     import Template from ${template};
-    import { hastToMdx } from ${utils};
+    import pagesData from ${pagesData};
+    import { PageContext, hastToMdx } from ${utils};
 
     var assets = {
       ${assets.join('')}
     };
 
     var hast = ${JSON.stringify(hast)};
+    var pageData = ${JSON.stringify(pageData)};
+    var context = { page: pageData, pages: pagesData };
 
     export default function MarkdownTemplate(props) {
       var mdx = React.useMemo(() => hastToMdx(hast, assets), [hast, assets]);
-      return <Template {...props}>{mdx}</Template>;
+      return (
+        <PageContext.Provider value={context}>
+          <Template {...props}>{mdx}</Template>
+        </PageContext.Provider>
+      );
     };
   `;
 }
