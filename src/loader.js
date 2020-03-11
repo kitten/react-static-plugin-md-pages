@@ -11,7 +11,6 @@ import raw from 'hast-util-raw';
 import { getMarkdownProcessor, getPageData } from './markdown';
 
 const INDEX_PAGE_RE = /^(readme|index)$/i;
-const INDEX_ROUTE_RE = /(?:[/\\]?(?:readme|index))\.md$/i;
 const REMAP_ROUTE_RE = /(?:[/\\]?(?:readme|index))?\.md$/i;
 
 export default function loader(source) {
@@ -59,12 +58,11 @@ export default function loader(source) {
       // Only apply to matching URLs
       if (!REMAP_ROUTE_RE.test(route)) return node;
       // Check whether the link's normalised URL is a known markdown file
-      if (path.resolve(this.context, route).startsWith(location)) {
-        // If so remove the `.md` extension
-        node.url = route.replace(REMAP_ROUTE_RE, '');
-        if (INDEX_ROUTE_RE.test(route)) node.url += '/';
-        if (hash) node.url += `#${hash}`;
-      }
+      if (!path.resolve(this.context, route).startsWith(location)) return node;
+
+      let url = route.replace(REMAP_ROUTE_RE, '/');
+      if (hash) url += `#${hash}`;
+      node.url = url;
     } catch (_err) {}
 
     return node;
