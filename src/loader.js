@@ -20,7 +20,6 @@ export default function loader(source) {
   const location = options.location || process.cwd();
   const pathPrefix = options.pathPrefix || '';
   const utils = stringifyRequest(this, require.resolve('./index.js'));
-  const pagesData = stringifyRequest(this, options.pagesDataFile);
   const processor = getMarkdownProcessor(options.remarkPlugins);
 
   // Compute the page's originalPath and path
@@ -108,7 +107,6 @@ export default function loader(source) {
   return `
     import React from "react";
     import Template from ${template};
-    import pagesData from ${pagesData};
     import { PageContext, hastToMdx } from ${utils};
 
     var assets = {
@@ -117,7 +115,7 @@ export default function loader(source) {
 
     var hast = ${JSON.stringify(hast)};
     var pageData = ${JSON.stringify(pageData)};
-    var context = { page: pageData, pages: pagesData };
+    var context = { page: pageData };
 
     export default function MarkdownTemplate(props) {
       var mdx = React.useMemo(() => hastToMdx(hast, assets), [hast, assets]);

@@ -6,11 +6,13 @@ import { getPages } from './markdown';
 
 const writeFile = promisify(fs.writeFile);
 
+const pagesFileName = 'pages.json';
+
 const staticPluginSourceMarkdown = (opts = {}) => ({
   async getRoutes(_, { config }) {
     // Resolve target location from ROOT folder
     const location = path.resolve(config.paths.ROOT, opts.location);
-    const pagesDataFile = path.resolve(config.paths.ARTIFACTS, 'pages.json');
+    const pagesDataFile = path.resolve(config.paths.ARTIFACTS, pagesFileName);
 
     // Get page data for each discovered markdown file
     const pages = await getPages(
@@ -41,8 +43,16 @@ const staticPluginSourceMarkdown = (opts = {}) => ({
   webpack(webpackConfig, { config, defaultLoaders }) {
     // Resolve target location and template from ROOT folder
     const location = path.resolve(config.paths.ROOT, opts.location);
-    const pagesDataFile = path.resolve(config.paths.ARTIFACTS, 'pages.json');
+    const pagesDataFile = path.resolve(config.paths.ARTIFACTS, pagesFileName);
     const defaultTemplate = path.resolve(config.paths.ROOT, opts.template);
+
+    // Make the `pages` data available through an alias
+    Object.assign(webpackConfig.resolve.alias, {
+      reactStaticPagesData$: path.resolve(
+        config.paths.ARTIFACTS,
+        pagesFileName
+      ),
+    });
 
     // Create a rule that only applies to the discovered markdown files
     webpackConfig.module.rules[0].oneOf.unshift({
@@ -59,7 +69,6 @@ const staticPluginSourceMarkdown = (opts = {}) => ({
             remarkPlugins: opts.remarkPlugins,
             pathPrefix: opts.pathPrefix,
             defaultTemplate,
-            pagesDataFile,
             location,
           },
         },
