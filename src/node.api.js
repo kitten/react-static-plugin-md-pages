@@ -69,7 +69,6 @@ const staticPluginSourceMarkdown = (opts = {}) => ({
             remarkPlugins: opts.remarkPlugins,
             pathPrefix: opts.pathPrefix,
             defaultTemplate,
-            pagesDataFile,
             location,
           },
         },

@@ -1,5 +1,6 @@
 import React from 'react';
 import { mdx } from '@mdx-js/react';
+import pagesData from 'reactStaticPagesData';
 
 /** Recursively convert an MDX-compatible HAST to JSX */
 export const hastToMdx = (node, assets, i = 0) => {
@@ -38,7 +39,6 @@ export const hastToMdx = (node, assets, i = 0) => {
 
 export const PageContext = React.createContext({
   page: null,
-  pages: null,
 });
 
 /** Returns the current page's markdown data */
@@ -49,5 +49,5 @@ export const useMarkdownPage = () => {
 
 /* Returns all page's nested markdown data */
 export const useMarkdownTree = () => {
-  return React.useContext(PageContext).pages;
+  return pagesData;
 };
