@@ -101,7 +101,7 @@ export const getMarkdownProcessor = (plugins = []) => {
   return processor;
 };
 
-export const getPageData = tree => {
+export const getPageData = (tree, filename) => {
   const slugger = new GithubSlugger();
 
   // Parse the frontmatter yaml data to JSON
@@ -147,7 +147,7 @@ export const getPages = async (location, remarkPlugins, pathPrefix, order) => {
       // Parse the given markdown file into MAST
       const vfile = await readVFile(originalPath);
       const tree = processor.parse(vfile);
-      const { frontmatter, headings } = getPageData(tree);
+      const { frontmatter, headings } = getPageData(tree, filename);
 
       return {
         originalPath: path.join(dirname, filename),
