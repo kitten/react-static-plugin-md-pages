@@ -216,7 +216,10 @@ named `advanced/`, you can swap their order as so:
 
 This plugin provides two hooks `useMarkdownPage` and `useMarkdownTree`. The former returns
 information about the current page's markdown data and the latter returns a nested tree of
-all markdown pages (as long as you're on a markdown page.)
+all markdown pages.
+
+The `useMarkdownPage` hook is available as long as you are on any of the markdown page, `useMarkdownTree` is available in any react-static page.
+
 
 ```
 useMarkdownPage()
