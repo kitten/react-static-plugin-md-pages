@@ -24,9 +24,10 @@ export default function loader(source) {
 
   // Compute the page's originalPath and path
   const relative = path.relative(location, this.resourcePath);
+  const filename = path.basename(relative, '.md');
   const originalPath = path.join(
     path.dirname(relative),
-    path.basename(relative, '.md')
+    filename
   );
   const keyPath = (pathPrefix ? [pathPrefix] : [])
     .concat(originalPath.split(path.sep))
@@ -35,7 +36,7 @@ export default function loader(source) {
   // Parse the markdown contents
   const tree = processor.parse(source);
   const pageData = {
-    ...getPageData(tree),
+    ...getPageData(tree, filename),
     originalPath,
     key: keyPath[keyPath.length - 1],
     path: keyPath.join('/'),
