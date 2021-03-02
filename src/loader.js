@@ -29,12 +29,17 @@ export default function loader(source) {
     path.dirname(relative),
     filename
   );
+
   const keyPath = (pathPrefix ? [pathPrefix] : [])
     .concat(originalPath.split(path.sep))
     .filter(key => !INDEX_PAGE_RE.test(key));
+  const basePath = (pathPrefix ? ['', pathPrefix] : [''])
+    .concat(originalPath.split(path.sep))
+    .join('/');
 
   // Parse the markdown contents
   const tree = processor.parse(source);
+
   const pageData = {
     ...getPageData(tree, filename),
     originalPath,
@@ -54,13 +59,11 @@ export default function loader(source) {
   // Fix up all links that end in `.md`
   visit(tree, 'link', node => {
     try {
-      const [route = '', hash = ''] = node.url.split('#');
+      let [route = '', hash = ''] = node.url.split('#');
       // Only apply to matching URLs
       if (!REMAP_ROUTE_RE.test(route)) return node;
-      // Check whether the link's normalised URL is a known markdown file
-      if (!path.resolve(this.context, route).startsWith(location)) return node;
-
-      let url = route.replace(REMAP_ROUTE_RE, '/');
+      // Append extra upwards direction for trailing slash
+      let url = path.join(basePath, `../${route}`).replace(REMAP_ROUTE_RE, '/');
       if (hash) url += `#${hash}`;
       node.url = url;
     } catch (_err) {}
