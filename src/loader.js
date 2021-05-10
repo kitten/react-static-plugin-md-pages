@@ -25,10 +25,7 @@ export default function loader(source) {
   // Compute the page's originalPath and path
   const relative = path.relative(location, this.resourcePath);
   const filename = path.basename(relative, '.md');
-  const originalPath = path.join(
-    path.dirname(relative),
-    filename
-  );
+  const originalPath = path.join(path.dirname(relative), filename);
 
   const keyPath = (pathPrefix ? [pathPrefix] : [])
     .concat(originalPath.split(path.sep))
@@ -61,7 +58,7 @@ export default function loader(source) {
     try {
       let [route = '', hash = ''] = node.url.split('#');
       // Only apply to matching URLs
-      if (!REMAP_ROUTE_RE.test(route)) return node;
+      if (!REMAP_ROUTE_RE.test(route) || /^\w+:/.test(route)) return node;
       // Append extra upwards direction for trailing slash
       let url = path.join(basePath, `../${route}`).replace(REMAP_ROUTE_RE, '/');
       if (hash) url += `#${hash}`;
