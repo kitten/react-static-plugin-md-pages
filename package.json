@@ -1,7 +1,7 @@
 {
   "name": "react-static-plugin-md-pages",
   "description": "react-static plugin to create nested pages from a given source directory",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "main": "index.js",
   "license": "MIT",
   "bugs": "https://github.com/kitten/react-static-plugin-md-pages/issues",
