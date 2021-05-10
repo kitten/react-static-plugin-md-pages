@@ -85,16 +85,16 @@ const groupPages = (pages, pathPrefix, orderOverride = {}) => {
 export const getMarkdownProcessor = (plugins = []) => {
   // By default the remark parsers gets the frontmatter data and removes
   // extra-long paragraphs
-  const processor = remark()
+  let processor = remark()
     .use(frontmatter, ['yaml'])
     .use(squeeze);
 
   // All plugins in opts.remarkPlugins will be added to remark
   plugins.forEach(plugin => {
     if (Array.isArray(plugin) && plugin.length > 1) {
-      fn.use(plugin[0], plugin[1]);
+      processor = processor.use(plugin[0], plugin[1]);
     } else {
-      fn.use(plugin);
+      processor = processor.use(plugin);
     }
   });
 
